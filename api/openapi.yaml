@@ -1,0 +1,1206 @@
+openapi: 3.0.1
+info:
+  description: |
+    elepay APIはRESTをベースに構成された決済APIです。支払い処理、返金処理など、決済に関わる運用における様々なことができます。
+  title: elepay API リファレンス
+  version: "1.0"
+servers:
+- url: https://api.elepay.io/
+security:
+- BasicAuth: []
+paths:
+  /charges:
+    get:
+      description: 決済に関する情報を一覧で取得します。
+      operationId: listCharges
+      parameters:
+      - description: 決済方法(複数の指定が可能です)
+        explode: true
+        in: query
+        name: paymentMethod
+        schema:
+          items:
+            enum:
+            - alipay
+            - alipay_web
+            - applepay
+            - applepay_web
+            - applepay_cn
+            - applepay_cn_web
+            - creditcard
+            - googlepay
+            - paypal
+            - unionpay
+            - unionpay_web
+            - linepay_web
+            - linepay
+            - wechat
+            - wechat_qr
+            - paidy
+            - paypay
+            - alipay_qr
+            type: string
+          type: array
+        style: form
+      - description: 開始時間（UTC）。指定した時間以降に作成されたデータを取得します。
+        in: query
+        name: from
+        schema:
+          format: int64
+          type: integer
+      - description: 終了時間（UTC）。指定した時間以前に作成されたデータを取得します
+        in: query
+        name: to
+        schema:
+          format: int64
+          type: integer
+      - description: 検索対象範囲の項目を指定します。
+        in: query
+        name: dateField
+        schema:
+          enum:
+          - expiry_time
+          - paid_time
+          - settle_time
+          - create_time
+          - update_time
+          type: string
+      - description: 支払状況
+        in: query
+        name: status
+        schema:
+          type: string
+      - description: 最大件数
+        in: query
+        name: limit
+        schema:
+          default: 20
+          maximum: 100
+          type: integer
+      - description: 検索開始位置
+        in: query
+        name: offset
+        schema:
+          default: 0
+          type: integer
+      - description: ソート項目
+        in: query
+        name: sort
+        schema:
+          enum:
+          - expiry_time
+          - paid_time
+          - settle_time
+          - create_time
+          - update_time
+          type: string
+      - description: ソート順
+        in: query
+        name: order
+        schema:
+          default: desc
+          type: string
+      responses:
+        200:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ChargesResponse'
+          description: OK
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: List charges
+      tags:
+      - Charge
+    post:
+      description: 決済処理を行います。
+      operationId: createCharge
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/ChargeReq'
+        description: 支払リクエスト
+        required: true
+      responses:
+        201:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ChargeDto'
+          description: |
+            Created
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: Create charge
+      tags:
+      - Charge
+      x-codegen-request-body-name: charge
+  /charges/{id}:
+    delete:
+      description: 支払いを取り消します。
+      operationId: revokeCharge
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ChargeDto'
+          description: OK
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: revoke charge
+      tags:
+      - Charge
+    get:
+      description: 決済に関する詳細情報を取得します。
+      operationId: retrieveCharge
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ChargeDto'
+          description: OK
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: Retrieve charge
+      tags:
+      - Charge
+  /charges/{id}/refunds:
+    get:
+      description: 返金に関する情報を一覧で取得します。
+      operationId: listChargesRefunds
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RefundsResponse'
+          description: |
+            OK
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: List refunds
+      tags:
+      - Refund
+    post:
+      description: 決済の全額あるいは一部の返金処理を行います。
+      operationId: createRefund
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/RefundReq'
+        description: 返金の詳細情報
+        required: true
+      responses:
+        201:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RefundDto'
+          description: |
+            Created
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: Create refund
+      tags:
+      - Refund
+      x-codegen-request-body-name: refund
+  /charges/{id}/refunds/{refundId}:
+    get:
+      description: 返金に関する詳細情報を取得します。
+      operationId: retrieveChargeRefund
+      parameters:
+      - description: Charge ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      - description: Refund ID
+        in: path
+        name: refundId
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RefundDto'
+          description: |
+            OK
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: Retrieve refund
+      tags:
+      - Refund
+  /refunds:
+    get:
+      description: 返金に関する情報を一覧で取得します。
+      operationId: listRefunds
+      parameters:
+      - description: Charge ID
+        in: query
+        name: chargeId
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RefundsResponse'
+          description: |
+            OK
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: List refunds
+      tags:
+      - Refund
+  /refunds/{refundId}:
+    get:
+      description: 返金に関する詳細情報を取得します。
+      operationId: retrieveRefund
+      parameters:
+      - description: Refund ID
+        in: path
+        name: refundId
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RefundDto'
+          description: |
+            OK
+        400:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestBadRequest'
+          description: Bad request
+        500:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/RestInternalServerError'
+          description: Internal Server Error
+        default:
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ElepayRestError'
+          description: Error
+      summary: Retrieve refund
+      tags:
+      - Refund
+components:
+  responses:
+    BadRequest:
+      content:
+        application/json;charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/BadRequestError'
+      description: Bad request
+    DefaultError:
+      content:
+        application/json;charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ElepayError'
+      description: Error
+    InternalServerError:
+      content:
+        application/json;charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+      description: Internal Server Error
+    NotFound:
+      content:
+        application/json;charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ElepayError'
+      description: The specified resource was not found
+    RestBadRequest:
+      content:
+        application/json;charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/RestBadRequest'
+      description: Bad request
+    RestDefaultError:
+      content:
+        application/json;charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ElepayRestError'
+      description: Error
+    RestInternalServerError:
+      content:
+        application/json;charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/RestInternalServerError'
+      description: Internal Server Error
+    Unauthorized:
+      content:
+        application/json;charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/ElepayError'
+      description: Unauthorized
+  schemas:
+    PaymentMethodType:
+      description: |
+        決済方法
+        - alipay
+        - alipay_web
+        - applepay
+        - applepay_cn
+        - applepay_cn_web
+        - creditcard
+        - googlepay
+        - paypal
+        - unionpay
+        - unionpay_web
+        - linepay
+        - linepay_web
+        - wechat
+        - wechat_qr
+        - paidy
+        - paypay
+        - alipay_qr
+      enum:
+      - alipay
+      - alipay_web
+      - applepay
+      - applepay_web
+      - applepay_cn
+      - applepay_cn_web
+      - creditcard
+      - googlepay
+      - paypal
+      - unionpay
+      - unionpay_web
+      - linepay_web
+      - linepay
+      - wechat
+      - wechat_qr
+      - paidy
+      - paypay
+      - alipay_qr
+      type: string
+    ChargeDateTimeType:
+      description: |
+        時間項目
+        - expiry_time 支払有効時間
+        - paid_time 払う時間
+        - settle_time 支払締め時間
+        - create_time 支払新規時間
+        - update_time 支払更新時間
+      enum:
+      - expiry_time
+      - paid_time
+      - settle_time
+      - create_time
+      - update_time
+      type: string
+    ChargeDto:
+      description: 支払いオブジェクト
+      example:
+        amount: 6
+        metadata:
+          key: '{}'
+        orderNo: orderNo
+        settleTime: 4
+        refundTime: 3
+        description: description
+        paidTime: 9
+        refunds:
+          amount: 1
+          data:
+          - reason: reason
+            liveMode: true
+            amount: 5
+            createTime: 7
+            chargeId: chargeId
+            refundedTime: 2
+            currency: currency
+            id: id
+            object: refund
+            status: status
+          - reason: reason
+            liveMode: true
+            amount: 5
+            createTime: 7
+            chargeId: chargeId
+            refundedTime: 2
+            currency: currency
+            id: id
+            object: refund
+            status: status
+          totalCount: 5
+          object: refundExt
+        liveMode: true
+        credential: credential
+        createTime: 7
+        extra:
+          key: '{}'
+        clientIp: clientIp
+        paid: true
+        expiryTime: 2
+        currency: JPY
+        refunded: true
+        id: id
+        object: charge
+        status: status
+      properties:
+        id:
+          description: Charge ID
+          type: string
+        object:
+          default: charge
+          description: 対象種類の表記
+          type: string
+        liveMode:
+          description: |
+            本番モードかどうか
+            - false テストモード
+            - true 本番モード
+          type: boolean
+        amount:
+          description: 支払い金額
+          type: integer
+        currency:
+          default: JPY
+          description: 通貨コード (ISO_4217)
+          type: string
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethodType'
+        orderNo:
+          description: お客様システム側のオーダーNo、例えば注文番号、決済IDなど
+          type: string
+        description:
+          description: 支払い説明文
+          type: string
+        extra:
+          additionalProperties:
+            properties: {}
+            type: object
+          description: 支払いエキストラデータ
+          type: object
+        metadata:
+          additionalProperties:
+            properties: {}
+            type: object
+          description: 支払いメタデータ
+          type: object
+        clientIp:
+          description: Client IP アドレス
+          type: string
+        paid:
+          description: 支払い済みフラグ
+          type: boolean
+        refunded:
+          description: 返金済みフラグ
+          type: boolean
+        refunds:
+          $ref: '#/components/schemas/RefundExtDto'
+        status:
+          description: 支払い状態
+          type: string
+        credential:
+          description: Client SDK の認証情報
+          type: string
+        paidTime:
+          description: 支払い時間のUTCタイムスタンプ
+          format: int64
+          type: integer
+        refundTime:
+          description: 返金時間のUTCタイムスタンプ
+          format: int64
+          type: integer
+        expiryTime:
+          description: 支払い請求有効時間のUTCタイムスタンプ
+          format: int64
+          type: integer
+        settleTime:
+          description: 支払い締め時間のUTCタイムスタンプ
+          format: int64
+          type: integer
+        createTime:
+          description: 支払い新規時間のUTCタイムスタンプ
+          format: int64
+          type: integer
+      type: object
+    RefundDto:
+      description: 返金オブジェクト
+      example:
+        reason: reason
+        liveMode: true
+        amount: 5
+        createTime: 7
+        chargeId: chargeId
+        refundedTime: 2
+        currency: currency
+        id: id
+        object: refund
+        status: status
+      properties:
+        id:
+          description: Refund ID
+          type: string
+        object:
+          default: refund
+          description: 対象種類の表記
+          type: string
+        chargeId:
+          description: Charge ID
+          type: string
+        liveMode:
+          description: |
+            本番モードかどうか
+            - false テストモード
+            - true 本番モード
+          type: boolean
+        amount:
+          description: 返金金額。全額返金、及び amount を指定することで金額の部分返金を行うことができます。
+          type: integer
+        currency:
+          description: 通貨コード (ISO_4217)
+          type: string
+        reason:
+          description: 返金理由
+          type: string
+        status:
+          description: 返金状態
+          type: string
+        refundedTime:
+          description: 返金を行う時間のUTCタイムスタンプ。
+          format: int64
+          type: integer
+        createTime:
+          description: 返金新規時間のUTCタイムスタンプ。
+          format: int64
+          type: integer
+      type: object
+    RefundExtDto:
+      description: 返金のサマリー。複数回返金された場合、返金内容をサマリーして返します。
+      example:
+        amount: 1
+        data:
+        - reason: reason
+          liveMode: true
+          amount: 5
+          createTime: 7
+          chargeId: chargeId
+          refundedTime: 2
+          currency: currency
+          id: id
+          object: refund
+          status: status
+        - reason: reason
+          liveMode: true
+          amount: 5
+          createTime: 7
+          chargeId: chargeId
+          refundedTime: 2
+          currency: currency
+          id: id
+          object: refund
+          status: status
+        totalCount: 5
+        object: refundExt
+      properties:
+        object:
+          default: refundExt
+          description: 対象種類の表記
+          type: string
+        amount:
+          description: 返金総額
+          type: integer
+        totalCount:
+          description: 返金回数
+          type: integer
+        data:
+          description: 返金詳細情報
+          items:
+            $ref: '#/components/schemas/RefundDto'
+          type: array
+      type: object
+    ChargesResponse:
+      description: 支払い情報リスト
+      example:
+        total: 0
+        charges:
+        - amount: 6
+          metadata:
+            key: '{}'
+          orderNo: orderNo
+          settleTime: 4
+          refundTime: 3
+          description: description
+          paidTime: 9
+          refunds:
+            amount: 1
+            data:
+            - reason: reason
+              liveMode: true
+              amount: 5
+              createTime: 7
+              chargeId: chargeId
+              refundedTime: 2
+              currency: currency
+              id: id
+              object: refund
+              status: status
+            - reason: reason
+              liveMode: true
+              amount: 5
+              createTime: 7
+              chargeId: chargeId
+              refundedTime: 2
+              currency: currency
+              id: id
+              object: refund
+              status: status
+            totalCount: 5
+            object: refundExt
+          liveMode: true
+          credential: credential
+          createTime: 7
+          extra:
+            key: '{}'
+          clientIp: clientIp
+          paid: true
+          expiryTime: 2
+          currency: JPY
+          refunded: true
+          id: id
+          object: charge
+          status: status
+        - amount: 6
+          metadata:
+            key: '{}'
+          orderNo: orderNo
+          settleTime: 4
+          refundTime: 3
+          description: description
+          paidTime: 9
+          refunds:
+            amount: 1
+            data:
+            - reason: reason
+              liveMode: true
+              amount: 5
+              createTime: 7
+              chargeId: chargeId
+              refundedTime: 2
+              currency: currency
+              id: id
+              object: refund
+              status: status
+            - reason: reason
+              liveMode: true
+              amount: 5
+              createTime: 7
+              chargeId: chargeId
+              refundedTime: 2
+              currency: currency
+              id: id
+              object: refund
+              status: status
+            totalCount: 5
+            object: refundExt
+          liveMode: true
+          credential: credential
+          createTime: 7
+          extra:
+            key: '{}'
+          clientIp: clientIp
+          paid: true
+          expiryTime: 2
+          currency: JPY
+          refunded: true
+          id: id
+          object: charge
+          status: status
+        error:
+          code: code
+          message: message
+      properties:
+        total:
+          description: 件数
+          type: integer
+        charges:
+          description: 支払い詳細内容
+          items:
+            $ref: '#/components/schemas/ChargeDto'
+          type: array
+        error:
+          $ref: '#/components/schemas/ElepayRestError'
+      type: object
+    RefundsResponse:
+      description: 返金情報リスト
+      example:
+        total: 0
+        error:
+          code: code
+          message: message
+        refunds:
+        - reason: reason
+          liveMode: true
+          amount: 5
+          createTime: 7
+          chargeId: chargeId
+          refundedTime: 2
+          currency: currency
+          id: id
+          object: refund
+          status: status
+        - reason: reason
+          liveMode: true
+          amount: 5
+          createTime: 7
+          chargeId: chargeId
+          refundedTime: 2
+          currency: currency
+          id: id
+          object: refund
+          status: status
+      properties:
+        total:
+          description: 件数
+          type: integer
+        refunds:
+          description: 返金詳細内容
+          items:
+            $ref: '#/components/schemas/RefundDto'
+          type: array
+        error:
+          $ref: '#/components/schemas/ElepayRestError'
+      type: object
+    ElepayRestError:
+      description: エラー情報
+      example:
+        code: code
+        message: message
+      properties:
+        code:
+          description: エラーコード
+          type: string
+        message:
+          description: エラーメッセージ
+          type: string
+      type: object
+    RestInternalServerError:
+      description: Internal Server Error
+      type: object
+    RestBadRequest:
+      description: Bad request
+      type: object
+    ElepayError:
+      description: エラー情報
+      properties:
+        type:
+          description: エラーコードとメッセージ
+          enum:
+          - not_found_error
+          - invalid_request_error
+          - channel_validation_error
+          - channel_error
+          - provider_error
+          - connection_error
+          - process_error
+          - authentication_error
+          - forbidden_error
+          - rate_limit_error
+          - api_error
+          - api_connection_error
+          type: string
+        code:
+          description: エラーコード
+          enum:
+          - not_found
+          - not_found_charge
+          - auth_invalid_credential
+          - auth_invalid_provider
+          - invalid_request
+          - invalid_order_no
+          - invalid_payment_method
+          - invalid_amount
+          - invalid_token
+          - invalid_front_url
+          - invalid_cancel_url
+          - invalid_contract_number
+          - invalid_username
+          - invalid_email
+          - invalid_password
+          - invalid_order_no_length
+          - invalid_status_change
+          - invalid_status_change_by_app
+          - invalid_status_change_by_provider
+          - invalid_provider_unique_id
+          - invalid_provider_capture_id
+          - invalid_channel_group
+          - invalid_buyer_name
+          - invalid_buyer_phone
+          - invalid_buyer_email
+          - invalid_buyer_zip
+          - invalid_buyer_address1
+          - invalid_buyer_address2
+          - invalid_code_url
+          - invalid_shop_id
+          - invalid_shop_name
+          - invalid_shop_no
+          - invalid_product_id
+          - invalid_product_name
+          - invalid_product_price
+          - invalid_product_count
+          - invalid_setting_type
+          - invalid_setting_name
+          - invalid_category_id
+          - invalid_category_name
+          - invalid_order_amount
+          - invalid_order_amount_change
+          - invalid_product_inactive
+          - invalid_name
+          - invalid_role
+          - invalid_campaign_name
+          - invalid_campaign_time
+          - invalid_campaign_start_time
+          - invalid_campaign_expired_time
+          - invalid_campaign_discount_type
+          - invalid_campaign_discount_value
+          - invalid_campaign_condition_type
+          - invalid_value
+          - invalid_theme_name
+          - invalid_label_name
+          - invalid_sku
+          - invalid_charge
+          - invalid_from
+          - invalid_to
+          - invalid_export_data_date_range
+          - invalid_secret_key
+          - invalid_auth_code
+          - invalid_terminal_id
+          - invalid_lang
+          - invalid_title
+          - invalid_content
+          - invalid_type
+          - invalid_legal_registration_no
+          - invalid_country
+          - invalid_publish_date
+          - invalid_json_format
+          - invalid_title_length
+          - invalid_name_length
+          - invalid_ref_type_length
+          - invalid_ref_id_length
+          - invalid_type_length
+          - invalid_desc_length
+          - invalid_key_length
+          - invalid_code_length
+          - invalid_legal_registration_no_length
+          - invalid_establishment_date_length
+          - invalid_country_length
+          - invalid_bank_code_length
+          - invalid_branch_code_length
+          - invalid_bank_account_number_length
+          - invalid_birthday_length
+          - invalid_email_length
+          - invalid_zip_length
+          - invalid_tel_length
+          - invalid_fax_length
+          - invalid_sort_order_length
+          - invalid_parking_rack_no
+          - invalid_parking_rack_status
+          - invalid_parking_rack_status_not_used
+          - invalid_parking_rack_status_opened
+          - invalid_parking_rack_status_locked
+          - invalid_parking_rack_status_connect_fail
+          - invalid_parking_no_or_rack_no
+          - invalid_parking_pin_code
+          - incorrect_currency
+          - incorrect_card_number
+          - incorrect_amount
+          - incorrect_merchant_id
+          - incorrect_product_id
+          - incorrect_export_data_date_range
+          - incorrect_status
+          - provider_response_result_failed
+          - no_such_token
+          - duplicate_order_no
+          - duplicate_shop_no
+          - duplicate_contract_number
+          - duplicate_email
+          - duplicate_legal_registration_no
+          - duplicate_key
+          - duplicate_category_name
+          - expired_card
+          - card_declined
+          - processing_card_error
+          - required_key
+          - charge_already_captured
+          - charge_already_refunded
+          - refused_refund
+          - refused_refund_constraint_day
+          - refused_refund_non_captured
+          - inactive_application
+          - inactive_payment_method
+          - inactive_product
+          - exist_payment_method
+          - campaign_already_started
+          - over_shop_limit_count
+          - over_product_limit_count
+          - process_error
+          - api_connection_error
+          - provider_config_error
+          - api_error
+          - forbidden
+          - forbidden_close_self
+          - recaptcha_fail
+          type: string
+        message:
+          description: エラーメッセージ
+          type: string
+      type: object
+    InternalServerError:
+      $ref: '#/components/schemas/ElepayRestError'
+    BadRequestError:
+      $ref: '#/components/schemas/ElepayRestError'
+    ChargeReq:
+      description: 支払リクエスト
+      example:
+        amount: 0
+        metadata:
+          key: '{}'
+        orderNo: orderNo
+        extra:
+          key: '{}'
+        clientIp: clientIp
+        description: description
+        currency: JPY
+      properties:
+        amount:
+          description: 金額
+          type: integer
+        currency:
+          default: JPY
+          description: 通貨コード (ISO_4217)
+          type: string
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethodType'
+        orderNo:
+          description: お客様側のシステムオーダーNo（例：注文番号、決済IDなど）
+          type: string
+        description:
+          description: 決済に関する説明
+          type: string
+        extra:
+          additionalProperties:
+            properties: {}
+            type: object
+          description: 決済に関する追加情報がある場合に利用します。
+          type: object
+        metadata:
+          additionalProperties:
+            properties: {}
+            type: object
+          description: メタデータ
+          type: object
+        clientIp:
+          description: Client IP アドレス
+          type: string
+      type: object
+    RefundReq:
+      description: 返金リクエスト
+      example:
+        reason: reason
+        amount: 0
+        chargeId: chargeId
+        currency: currency
+      properties:
+        chargeId:
+          description: Charge ID
+          type: string
+        amount:
+          description: 返金額。全額返金、及び amount の指定で任意の金額で返金ができます。
+          type: integer
+        currency:
+          description: 通貨コード (ISO_4217)
+          type: string
+        reason:
+          description: 返金理由
+          type: string
+      type: object
+  securitySchemes:
+    BasicAuth:
+      scheme: basic
+      type: http
+x-samples-languages:
+- curl
+- java
+- node
+- ruby
+- javascript
+- python
+- go
